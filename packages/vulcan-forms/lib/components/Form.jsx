@@ -72,7 +72,19 @@ const compactParent = (object, path) => {
   const parentPath = getParentPath(path);
 
   // note: we only want to compact arrays, not objects
-  const compactIfArray = x => (Array.isArray(x) ? compact(x) : x);
+  const compactIfArray = (x) => {
+    if (Array.isArray(x)) {
+      // Experimental to avoid empty arrays in database (2 if's)
+      if (isEmptyValue(x)) {
+        return null
+      }
+      if (x.length === 1 && isEmptyValue(x[0])) {
+        return null
+      }
+      return compact(x)
+    }
+    return x
+  };
 
   update(object, parentPath, compactIfArray);
 };
