@@ -62,7 +62,7 @@ input String_Selector {
   #_lte: String
   #_neq: String
   #_nilike: String
-  #_nin: [String!]
+  _nin: [String!]
   #_nlike: String
   #_nsimilar: String
   #_similar: String
