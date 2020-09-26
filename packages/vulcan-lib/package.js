@@ -38,7 +38,7 @@ Package.onUse(function(api) {
     'mongo',
     'check',
     'http',
-    'email',
+    'email@2.0.0',
     'random',
     'apollo@3.1.0',
 
