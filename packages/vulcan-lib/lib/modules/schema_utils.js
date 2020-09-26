@@ -7,18 +7,18 @@ import _get from 'lodash/get';
 import _isEmpty from 'lodash/isEmpty';
 import _omit from 'lodash/omit';
 import SimpleSchema from 'simpl-schema';
-import moment from 'moment-timezone';
+import moment from 'moment';
 import { getSetting } from './settings';
 
 export const formattedDateResolver = fieldName => {
   return (document = {}, args = {}, context = {}) => {
     const { format } = args;
-    const { timezone = getSetting('timezone') } = context;
+    // const { timezone = getSetting('timezone') } = context;
     if (!document[fieldName]) return;
     let m = moment(document[fieldName]);
-    if (timezone) {
-      m = m.tz(timezone);
-    }
+    // if (timezone) {
+    //   m = m.tz(timezone);
+    // }
     return format === 'ago' ? m.fromNow() : m.format(format);
   };
 };
