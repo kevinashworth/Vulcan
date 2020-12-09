@@ -7,22 +7,22 @@ import classNames from 'classnames';
 
 
 export const styles = theme => ({
-  
+
   error: {
     color: theme.palette.error.main,
   },
-  
+
   formHelperText: {
     display: 'flex',
     '& :first-child': {
       flexGrow: 1,
     }
   },
-  
+
 });
 
 
-const MuiFormHelper = (props) => {
+const FormHelper = (props) => {
   const {
     className,
     classes,
@@ -34,43 +34,43 @@ const MuiFormHelper = (props) => {
     charsCount,
     max,
   } = props;
-  
+
   if (!help && !hasErrors && !showCharsRemaining) {
     return null;
   }
-  
+
   const errorMessage = hasErrors &&
     <Components.FormError error={errors[0]} />;
-  
+
   return (
     <FormHelperText className={classNames(className, classes.formHelperText)} error={hasErrors}>
-      
+
       <span>
         {
           hasErrors ? errorMessage : help
         }
       </span>
-      
+
       {
         showCharsRemaining &&
-        
+
         <span className={charsRemaining < 0 ? classes.error : null}>
           {charsCount} / {max}
         </span>
       }
-    
+
     </FormHelperText>
   );
 };
 
 
-MuiFormHelper.propTypes = {
+FormHelper.propTypes = {
   className: PropTypes.string,
   classes: PropTypes.object.isRequired,
   value: PropTypes.any,
   changeValue: PropTypes.func,
-  addonAfter: PropTypes.oneOfType([PropTypes.string, PropTypes.node, PropTypes.func]),
+  addonAfter: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
 };
 
 
-export default withStyles(styles)(MuiFormHelper);
+export default withStyles(styles)(FormHelper);

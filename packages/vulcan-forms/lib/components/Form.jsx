@@ -22,6 +22,8 @@ import {
   isIntlField,
   mergeWithComponents,
   formatLabel,
+  getIntlLabel,
+  getIntlKeys,
 } from 'meteor/vulcan:core';
 import React, { Component } from 'react';
 import SimpleSchema from 'simpl-schema';
@@ -149,10 +151,11 @@ const getInitialStateFromProps = nextProps => {
 class SmartForm extends Component {
   constructor(props) {
     super(props);
-
+    const state = getInitialStateFromProps(props);
     this.state = {
-      ...getInitialStateFromProps(props),
+      ...state,
     };
+    if(props.initCallback) props.initCallback(state.currentDocument);
   }
 
   defaultValues = {};
@@ -215,6 +218,9 @@ class SmartForm extends Component {
   getData = customArgs => {
     // we want to keep prefilled data even for hidden/removed fields
     let data = this.props.prefilledProps || {};
+
+    // omit prefilled props for nested fields
+    data = omitBy(data, (value, key) => key.endsWith('.$'));
 
     const args = {
       excludeRemovedFields: false,
@@ -395,6 +401,7 @@ class SmartForm extends Component {
     }
 
     field.label = this.getLabel(fieldName);
+    field.intlKeys = this.getIntlKeys(fieldName);
     // // replace value by prefilled value if value is empty
     // const prefill = fieldSchema.prefill || (fieldSchema.form && fieldSchema.form.prefill);
     // if (prefill) {
@@ -429,8 +436,9 @@ class SmartForm extends Component {
     }
 
     // add description as help prop
-    if (fieldSchema.description) {
-      field.help = fieldSchema.description;
+    const description = this.getDescription(fieldName);
+    if (description) {
+      field.help = description;
     }
 
     return field;
@@ -511,6 +519,20 @@ class SmartForm extends Component {
 
   /*
 
+  Get a field's intl keys (useful for debugging)
+
+  */
+  getIntlKeys = fieldName => {
+    const collectionName = this.props.collectionName.toLowerCase();
+    return getIntlKeys({
+      fieldName: fieldName,
+      collectionName,
+      schema: this.state.flatSchema,
+    });
+  };
+
+  /*
+
    Get a field's label
 
    */
@@ -535,13 +557,32 @@ class SmartForm extends Component {
 
   /*
 
+   Get a field's description
+
+   (Same as getLabel but pass isDescription: true )
+   */
+  getDescription = (fieldName) => {
+    const collectionName = this.props.collectionName.toLowerCase();
+    const description = getIntlLabel({
+      intl: this.context.intl,
+      fieldName: fieldName,
+      collectionName: collectionName,
+      schema: this.state.flatSchema,
+      isDescription: true,
+    });
+    return description || null;
+  }
+
+  /*
+
   Get a field option's label
 
   */
   getOptionLabel = (fieldName, option) => {
     const collectionName = this.props.collectionName.toLowerCase();
+    const intlId = option.intlId || `${collectionName}.${fieldName}.${option.value}`;
     return this.context.intl.formatMessage({
-      id: `${collectionName}.${fieldName}.${option.value}`,
+      id: intlId,
       defaultMessage: option.label,
     });
   };
@@ -674,7 +715,9 @@ class SmartForm extends Component {
   UNSAFE_componentWillReceiveProps(nextProps) {
     const needReset = !!RESET_PROPS.find(prop => !isEqual(this.props[prop], nextProps[prop]));
     if (needReset) {
-      this.setState(getInitialStateFromProps(nextProps));
+      const newState = getInitialStateFromProps(nextProps);
+      this.setState(newState);
+      if (nextProps.initCallback) nextProps.initCallback(newState.currentDocument);
     }
   }
 
@@ -982,11 +1025,20 @@ class SmartForm extends Component {
     if (this.getFormType() === 'new') {
       // create document form
       try {
-        const result = await this.props[`create${this.props.typeName}`]({ input: {
-          data,
-          contextName,
-        } });
-        this.newMutationSuccessCallback(result);
+        const result = await this.props[`create${this.props.typeName}`]({
+          input: {
+            data,
+            contextName,
+          },
+        });
+        const meta = this.props[`create${this.props.typeName}Meta`];
+        // in new versions of Apollo Client errors are no longer thrown/caught
+        // but can instead be provided as props by the useMutation hook
+        if (meta.error) {
+          this.mutationErrorCallback(document, meta.error);
+        } else {
+          this.newMutationSuccessCallback(result);
+        }
       } catch (error) {
         this.mutationErrorCallback(document, error);
       }
@@ -999,9 +1051,16 @@ class SmartForm extends Component {
             id: documentId,
             data,
             contextName,
-          }
+          },
         });
-        this.editMutationSuccessCallback(result);
+        const meta = this.props[`update${this.props.typeName}Meta`];
+        // in new versions of Apollo Client errors are no longer thrown/caught
+        // but can instead be provided as props by the useMutation hook
+        if (meta.error) {
+          this.mutationErrorCallback(document, meta.error);
+        } else {
+          this.editMutationSuccessCallback(result);
+        }
       } catch (error) {
         this.mutationErrorCallback(document, error);
       }

@@ -25,7 +25,7 @@ class FormComponent extends Component {
     this.state = {};
   }
 
-  static getDerivedStateFromProps(props) {
+  static getDerivedStateFromProps (props) {
     const { document, max } = props;
     if (!max) {
       return null;
@@ -105,8 +105,8 @@ class FormComponent extends Component {
 
     if (value !== this.getValue()) {
       const updateValue = this.props.locale ?
-          { locale: this.props.locale, value } :
-          value;
+        { locale: this.props.locale, value } :
+        value;
       this.props.updateCurrentValues({ [getPath(this.props)]: updateValue });
       this.props.clearFieldErrors(getPath(this.props));
     }
@@ -196,10 +196,10 @@ class FormComponent extends Component {
       fieldType === Number || fieldType === SimpleSchema.Integer
         ? 'number'
         : fieldType === Boolean
-        ? 'checkbox'
-        : fieldType === Date
-        ? 'date'
-        : 'text';
+          ? 'checkbox'
+          : fieldType === Date
+            ? 'date'
+            : 'text';
     return p.input || autoType;
   };
 
@@ -306,7 +306,7 @@ class FormComponent extends Component {
     return this.getFieldType() instanceof SimpleSchema;
   };
 
-  render() {
+  render () {
     const FormComponents = mergeWithComponents(this.props.formComponents);
 
     if (this.props.intlInput) {

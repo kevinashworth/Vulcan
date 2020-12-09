@@ -13,8 +13,8 @@ import parse from 'autosuggest-highlight/parse';
 import { registerComponent } from 'meteor/vulcan:core';
 import StartAdornment, { hideStartAdornment } from './StartAdornment';
 import EndAdornment from './EndAdornment';
-import MuiFormControl from './MuiFormControl';
-import MuiFormHelper from './MuiFormHelper';
+import FormControlLayout from './FormControlLayout';
+import FormHelper from './FormHelper';
 import _isEqual from 'lodash/isEqual';
 import classNames from 'classnames';
 import IsolatedScroll from 'react-isolated-scroll';
@@ -42,6 +42,9 @@ export const styles = theme => {
   const bottomLineColor = light ? 'rgba(0, 0, 0, 0.42)' : 'rgba(255, 255, 255, 0.7)';
 
   return {
+
+    root: {},
+
     container: {
       flexGrow: 1,
       position: 'relative',
@@ -143,16 +146,14 @@ export const styles = theme => {
       cursor: 'pointer',
       '&$disabled': {
         pointerEvents: 'none',
-      }
+      },
     },
-  
-    // From https://github.com/mui-org/material-ui/blob/v3.x/packages/material-ui/src/Input/Input.js
-    /* Styles applied to the root element if the component is focused. */
-    focused: {},
-    /* Styles applied to the root element if `disabled={true}`. */
-    disabled: {},
-    /* Styles applied to the root element if `error={true}`. */
+
     error: {},
+
+    disabled: {},
+
+    focused: {},
 
     underline: {
       '&:after': {
@@ -199,6 +200,10 @@ export const styles = theme => {
       },
       '&$disabled:before': {
         borderBottomStyle: 'dotted',
+        '@media print': {
+          borderBottomStyle: 'solid',
+          borderBottomWidth: 'thin',
+        },
       },
     },
 
@@ -216,20 +221,24 @@ export const styles = theme => {
       lineHeight: '1.1875em',
     },
 
-    muiIcon: {
+    selectIcon: {
       display: 'none',
     },
 
     inputAdornment: {
-      position: 'absolute',
-      right: 0,
       pointerEvents: 'none',
     },
+
+    menuItem: {},
+
+    menuItemHighlight: {},
+
+    menuItemIcon: {},
 
   };
 };
 
-const MuiSuggest = createReactClass({
+const FormSuggest = createReactClass({
   inputElement: null,
 
   mixins: [ComponentMixin],
@@ -240,9 +249,9 @@ const MuiSuggest = createReactClass({
         label: PropTypes.string,
         value: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         iconComponent: PropTypes.node,
-        formatted: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
+        formatted: PropTypes.oneOfType([PropTypes.node, PropTypes.elementType]),
         onClick: PropTypes.func,
-      })
+      }),
     ),
     classes: PropTypes.object.isRequired,
     limitToList: PropTypes.bool,
@@ -331,10 +340,10 @@ const MuiSuggest = createReactClass({
   },
 
   handleBlur: function(event, { highlightedSuggestion: suggestion }) {
-    if (suggestion && !this.props.disableSelectOnBlur) {
-      this.changeValue(suggestion);
-    } else {
+    if (!this.props.disableSelectOnBlur) {
       const selectedOption = this.getSelectedOption();
+      if (!selectedOption) return;
+
       this.changeValue(selectedOption);
       const inputValue = this.getInputValue(this.props);
       this.setState({
@@ -347,7 +356,7 @@ const MuiSuggest = createReactClass({
     if (this.props.disableText) return false;
 
     const selectedOption = this.getSelectedOption();
-    if (!selectedOption || selectedOption.value) return true;
+    if (!selectedOption || !selectedOption.value) return true;
     return selectedOption.label !== this.state.inputValue;
   },
 
@@ -422,13 +431,13 @@ const MuiSuggest = createReactClass({
     }
 
     return (
-      <MuiFormControl
+      <FormControlLayout
         {...this.getFormControlProperties()}
         shrinkLabel={inputFormatted && inputFormatted !== inputValue}
         htmlFor={this.getId()}>
         {element}
-        <MuiFormHelper {...this.getFormHelperProperties()} />
-      </MuiFormControl>
+        <FormHelper {...this.getFormHelperProperties()} />
+      </FormControlLayout>
     );
   },
 
@@ -494,9 +503,10 @@ const MuiSuggest = createReactClass({
       startAdornment,
       endAdornment,
       disabled,
+      errors,
       ...rest
     } = inputProps;
-    const { hideLabel } = this.props;
+    const { hideLabel, inputRef } = this.props;
 
     if (formatted && formatted !== value) {
       return (
@@ -507,9 +517,10 @@ const MuiSuggest = createReactClass({
           className={classNames(
             classes.inputRoot,
             classes.underline,
-            classes.formatted,
             disabled && classes.disabled,
-            hideLabel && classes.formattedNoLabel
+            errors?.length && classes.error,
+            classes.formatted,
+            hideLabel && classes.formattedNoLabel,
           )}>
           {startAdornment}
           {formatted}
@@ -523,10 +534,17 @@ const MuiSuggest = createReactClass({
         autoFocus={autoFocus}
         autoComplete={autoComplete}
         className={classes.textField}
-        classes={{ root: classes.inputRoot, focused: classes.inputFocused }}
+        classes={{
+          root: classes.inputRoot,
+          underline: classes.underline,
+          focused: classes.inputFocused,
+        }}
         value={value}
         inputRef={c => {
           ref(c);
+          if (inputRef) {
+            inputRef(c);
+          }
           this.inputElement = c;
         }}
         type="text"
@@ -541,6 +559,7 @@ const MuiSuggest = createReactClass({
   },
 
   renderSuggestion: function (suggestion, { query, isHighlighted }) {
+    const { classes } = this.props;
     const formatted = this.getOptionFormatted(suggestion, {
       disabled: this.props.disabled,
       selected: isHighlighted,
@@ -557,23 +576,23 @@ const MuiSuggest = createReactClass({
       parts.map((part, index) => {
         return part.highlight
           ?
-          <span key={index} style={{ fontWeight: 500 }}>{part.text}</span>
+          <span key={index} className={classes.menuItemHighlight}>{part.text}</span>
           :
-          <strong key={index} style={{ fontWeight: 300 }}>{part.text}</strong>;
+          <span key={index}>{part.text}</span>;
       });
     const isCurrent = suggestion.value === this.props.value;
-    const className = isCurrent ? this.props.classes.current : null;
+    const className = classNames(classes.menuItem, isCurrent && classes.current);
     return (
-      <MenuItem
-        selected={isHighlighted}
-        component="div"
-        className={className}
-        onClick={suggestion.onClick}
-        data-value={suggestion.value}>
-        {suggestion.iconComponent && (
-
-          <ListItemIcon>{suggestion.iconComponent}</ListItemIcon>
-        )}
+      <MenuItem selected={isHighlighted}
+                component="div"
+                className={className}
+                onClick={suggestion.onClick}
+                data-value={suggestion.value}
+      >
+        {
+          suggestion.iconComponent &&
+          <ListItemIcon classes={{ root: classes.menuItemIcon }}>{suggestion.iconComponent}</ListItemIcon>
+        }
         <div>
           {primary}
         </div>
@@ -603,14 +622,14 @@ const MuiSuggest = createReactClass({
 
     return (this.props.disableText || this.props.showAllOptions) && inputMatchesSelection
       ? this.props.options.filter(suggestion => {
-          return true;
-        })
+        return true;
+      })
       : inputLength === 0
-      ? this.props.options.filter(suggestion => {
+        ? this.props.options.filter(suggestion => {
           count++;
           return count <= maxSuggestions;
         })
-      : this.props.options.filter(suggestion => {
+        : this.props.options.filter(suggestion => {
           const label = this.getOptionLabel(suggestion);
           const keep = count < maxSuggestions && label.toLowerCase().includes(inputValue);
 
@@ -624,5 +643,5 @@ const MuiSuggest = createReactClass({
 
 });
 
-export default withStyles(styles)(MuiSuggest);
-registerComponent('MuiSuggest', MuiSuggest, [withStyles, styles]);
+export default withStyles(styles)(FormSuggest);
+registerComponent('FormSuggest', FormSuggest, [withStyles, styles]);

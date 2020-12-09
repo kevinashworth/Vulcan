@@ -1,9 +1,11 @@
 import React from 'react';
-import MuiSwitch from '../base-controls/MuiSwitch';
-import MuiCheckbox from '../base-controls/MuiCheckbox';
+import FormSwitch from '../base-controls/FormSwitch';
+import FormCheckbox from '../base-controls/FormCheckbox';
 import { registerComponent } from 'meteor/vulcan:core';
 
 const CheckboxComponent = ({ variant, refFunction, ...properties }) =>
-  variant == 'checkbox' ? <MuiCheckbox {...properties} ref={refFunction} /> : <MuiSwitch {...properties} ref={refFunction} />;
+  variant === 'checkbox' ?
+    <FormCheckbox {...properties} ref={refFunction} /> :
+    <FormSwitch {...properties} ref={refFunction} />;
 
 registerComponent('FormComponentCheckbox', CheckboxComponent);
