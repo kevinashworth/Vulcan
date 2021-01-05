@@ -75,7 +75,12 @@ export const multiQueryUpdater = ({
     } catch (err) {
       // could not find the query
       // TODO: be smarter about the error cases and check only for cache mismatch
-      console.log(err);
+      if (err.name.indexOf("Invariant Violation") === 0 && err.message.indexOf("Can't find field") === 0) {
+        console.log('[KA] that one queryResult error that I hate happened');
+      } else {
+        console.info('[KA] error in multiQueryUpdater:');
+        console.error(err);
+      }
     }
   });
 };
