@@ -57,17 +57,17 @@
       if (userWithSameEmail && userWithSameEmail._id !== user._id) {
         throw new Error(Utils.encodeIntlError({id:'users.email_already_taken', value: newEmail}));
       }
+      if (!userWithSameEmail) {
+        // if user.emails exists, change it too
+        if (!!user.emails) {
+          user.emails[0].address = newEmail;
+          user.emails[0].verified = false;
+          modifier.$set.emails = user.emails;
+        }
 
-      // if user.emails exists, change it too
-      if (!!user.emails) {
-        user.emails[0].address = newEmail;
-        user.emails[0].verified = false;
-        modifier.$set.emails = user.emails;
+        // update email hash
+        modifier.$set.emailHash = Users.avatar.hash(newEmail);
       }
-
-      // update email hash
-      modifier.$set.emailHash = Users.avatar.hash(newEmail);
-
     }
     return modifier;
   }
