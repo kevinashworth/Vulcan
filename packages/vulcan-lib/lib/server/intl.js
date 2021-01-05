@@ -174,7 +174,7 @@ export const getHeaderLocale = (headers, userLocale) => {
     localeMethod = 'setting';
   }
 
-  debug(`// locale: ${locale} (via ${localeMethod})`);
+  // debug(`// locale: ${locale} (via ${localeMethod})`);
 
   return locale;
 };
