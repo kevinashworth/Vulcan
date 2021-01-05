@@ -203,9 +203,9 @@ FormWrapper.propTypes = {
 
   documentId: PropTypes.string, // if a document is passed, this will be an edit form
   schema: PropTypes.object, // usually not needed
-  queryFragment: PropTypes.object,
+  queryFragment: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
   queryFragmentName: PropTypes.string,
-  mutationFragment: PropTypes.object,
+  mutationFragment: PropTypes.oneOfType([PropTypes.object, PropTypes.string]),
   mutationFragmentName: PropTypes.string,
 
   // graphQL
