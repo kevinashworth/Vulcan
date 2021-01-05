@@ -63,10 +63,6 @@ input String_Selector {
   _neq: String
   #_ilike: String
   #_nilike: String
-<<<<<<< HEAD
-  _nin: [String!]
-=======
->>>>>>> devel
   #_nlike: String
   #_similar: String
   #_nsimilar: String
