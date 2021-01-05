@@ -220,7 +220,7 @@ class SmartForm extends Component {
     let data = this.props.prefilledProps || {};
 
     // omit prefilled props for nested fields
-    data = omitBy(data, (value, key) => key.endsWith('.$'));
+    // data = omitBy(data, (value, key) => key.endsWith('.$'));
 
     const args = {
       excludeRemovedFields: false,
@@ -1034,7 +1034,7 @@ class SmartForm extends Component {
         const meta = this.props[`create${this.props.typeName}Meta`];
         // in new versions of Apollo Client errors are no longer thrown/caught
         // but can instead be provided as props by the useMutation hook
-        if (meta.error) {
+        if (meta && meta.error) {
           this.mutationErrorCallback(document, meta.error);
         } else {
           this.newMutationSuccessCallback(result);
@@ -1056,7 +1056,7 @@ class SmartForm extends Component {
         const meta = this.props[`update${this.props.typeName}Meta`];
         // in new versions of Apollo Client errors are no longer thrown/caught
         // but can instead be provided as props by the useMutation hook
-        if (meta.error) {
+        if (meta && meta.error) {
           this.mutationErrorCallback(document, meta.error);
         } else {
           this.editMutationSuccessCallback(result);
