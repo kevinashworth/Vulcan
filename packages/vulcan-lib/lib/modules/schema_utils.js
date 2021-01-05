@@ -61,7 +61,7 @@ export const createSchema = (schema, apiSchema = {}, dbSchema = {}) => {
       apiSchema[formattedFieldName] = {
         typeName: 'String',
         canRead,
-        arguments: 'format: String = "YYYY/MM/DD"',
+        arguments: 'format: String = "MMMM D YYYY, h:mm A"',
         resolver: formattedDateResolver(fieldName),
       };
     }
