@@ -1,32 +1,33 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Components, registerComponent, expandQueryFragments } from 'meteor/vulcan:core';
-import { useLazyQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import gql from 'graphql-tag';
 import isEmpty from 'lodash/isEmpty';
 
 const FormComponentLoader = props => {
   const { query, children, options, value, queryWaitsForValue } = props;
+  let loading = false,
+    error,
+    data;
 
   // if query is a function, execute it
   const queryText = typeof query === 'function' ? query({ value }) : query;
 
-  const [loadFieldQuery, { loading, error, data }] = useLazyQuery(gql(expandQueryFragments(queryText)));
-
-  const valueIsEmpty = isEmpty(value) || (Array.isArray(value) && value.length) === 0;
-
-  useEffect(() => {
-    if (queryWaitsForValue && valueIsEmpty) {
-      // we don't want to run this query until we have a value to pass to it
-      // so do nothing
-    } else {
-      loadFieldQuery({
-        variables: { value },
-      });
+  if (queryText) {
+    // if queryText exists or query function returned something, execute query
+    // use field's `query` property to load field-specific data
+    // pass current field value as variable to the query just in case
+    const formComponentQuery = gql(expandQueryFragments(queryText));
+    const queryResult = useQuery(formComponentQuery, {
+      skip: queryWaitsForValue && valueIsEmpty,
+      variables: { value }
+    });
+    loading = queryResult.loading;
+    error = queryResult.error;
+    data = queryResult.data;
+    if (error) {
+      throw new Error(error);
     }
-  }, [valueIsEmpty, value, queryWaitsForValue]);
-
-  if (error) {
-    throw new Error(error);
   }
 
   if (loading){
