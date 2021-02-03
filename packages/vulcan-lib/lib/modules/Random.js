@@ -1,10 +1,13 @@
-import cryptoRandomString from 'crypto-random-string';
-
+const UNMISTAKABLE_CHARS = '23456789ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnopqrstuvwxyz';
 
 export const Random = {};
-export const UNMISTAKABLE_CHARS = '23456789ABCDEFGHJKLMNPQRSTWXYZabcdefghijkmnopqrstuvwxyz';
-
 
 Random.id = function (length = 17) {
-  return cryptoRandomString({ length, characters: UNMISTAKABLE_CHARS });
-};
+  var result = '';
+  var characters = UNMISTAKABLE_CHARS;
+  var charactersLength = characters.length;
+  for (var i = 0; i < length; i++) {
+    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+  }
+  return result;
+}
